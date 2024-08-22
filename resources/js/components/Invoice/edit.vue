@@ -1,8 +1,15 @@
 
 <script setup>
 
-import { onMounted, ref, watch, computed } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
+
+let props = defineProps({
+    id: {
+        type: String,
+        default: ""
+    }
+})
 
 const router = useRouter();
 const form = ref([]);
@@ -10,11 +17,15 @@ const customers = ref([]);
 const products = ref([]);
 const listCart = ref([]);
 const isOpen = ref(false);
-const errorMessages= ref();
+const errorMessages = ref();
 
 const indexForm = async () => {
-    const response = await axios.get("/api/create/invoice");
+    const response = await axios.get(`/api/invoice/${props.id}/get`);
     form.value = response.data;
+    const products = response.data.products.map(product => {
+        return {...product, quantity: product.pivot.quantity ?? 0}
+    })
+    listCart.value = products;
     console.log(form.value);
 }
 let totalSum = ref();
@@ -72,9 +83,10 @@ const submitForm = async () => {
     formData.append("total", total);
     formData.append("invoice_items", JSON.stringify(listCart.value));
     formData.append("form", JSON.stringify(form.value));
+
     let response = "";
     try {
-        response = await axios.post("/api/invoice/create", formData);
+        response = await axios.post(`/api/invoice/${props.id}/edit`, formData);
     } catch(e) {
         if(e.response.status === 422) {
             errorMessages.value = e.response.data.errors;
@@ -82,7 +94,8 @@ const submitForm = async () => {
         console.log(e);
     }
     if(response && response.data) {
-        router.push("/")
+        // router.push("/")
+        console.log(response.data);
     }
 }
 
@@ -95,8 +108,8 @@ function get_message(field) {
     return errorMessages.value[field][0];
 }
 
-
 </script>
+
 <template>
     <p>{{ form.customer_id }}</p>
     <div class="container">
@@ -195,6 +208,7 @@ function get_message(field) {
                     </div>
                     <div class="table__footer--discount">
                         <p>Discount</p>
+                        <p style="font-size: 13px; color: red; margin-top: 10px;" v-if="is_error('discount')">{{ get_message("discount") }}</p>
                         <input type="text" v-model="form.discount" class="input">
                     </div>
                     <div class="table__footer--total">
@@ -246,6 +260,8 @@ function get_message(field) {
     <br><br><br>
     </div>
 </template>
+
+
 <style scoped>
 .error {
     border: 1px solid red;
