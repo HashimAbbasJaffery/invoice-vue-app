@@ -1,7 +1,7 @@
 
 <script setup>
 
-import { onMounted, ref, watch, computed } from 'vue';
+import { onMounted, ref, watch, computed, inject } from 'vue';
 import { useRouter } from 'vue-router';
 
 const router = useRouter();
@@ -11,6 +11,7 @@ const products = ref([]);
 const listCart = ref([]);
 const isOpen = ref(false);
 const errorMessages= ref();
+let isLoading = inject("isLoading");
 
 const indexForm = async () => {
     const response = await axios.get("/api/create/invoice");
@@ -33,6 +34,7 @@ onMounted(async () => {
     await indexForm();
     await getCustomers();
     await getProducts();
+    isLoading.value = false;
 });
 
 const addToCart = item => {
@@ -97,8 +99,7 @@ function get_message(field) {
 
 
 </script>
-<template>
-    <p>{{ form.customer_id }}</p>
+<template v-show="isLoading.value">
     <div class="container">
         <div class="invoices">
 
@@ -195,6 +196,7 @@ function get_message(field) {
                     </div>
                     <div class="table__footer--discount">
                         <p>Discount</p>
+                        <p style="font-size: 13px; color: red; margin-top: 10px;" v-if="is_error('discount')">{{ get_message("discount") }}</p>
                         <input type="text" v-model="form.discount" class="input">
                     </div>
                     <div class="table__footer--total">

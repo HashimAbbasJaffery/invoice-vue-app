@@ -1,4 +1,4 @@
-<template>
+<template v-show="isLoading">
     <div class="container">
         <div class="invoices">
 
@@ -159,8 +159,10 @@ import { onMounted, ref } from 'vue';
 import moment from 'moment';
 import { useRouter } from 'vue-router';
 import confirm from '../../utiils/confirmation';
+import { inject } from 'vue';
 
 const router = useRouter();
+let isLoading = inject("isLoading");
 const invoice = ref([]);
 import Swal from 'sweetalert2';
 
@@ -174,6 +176,7 @@ let props = defineProps({
 onMounted( async () => {
     const response = await axios.get(`/api/invoice/${props.id}/get`);
     invoice.value = response.data;
+    isLoading.value = false;
 })
 
 const print = () => {
@@ -181,6 +184,7 @@ const print = () => {
 }
 
 const deleteInvoice = async () => {
+    isLoading = true;
     const response = await axios.delete(`/api/invoice/${props.id}/delete`);
     if(response.data) {
         router.push("/");
@@ -201,6 +205,7 @@ const onDelete = () => {
 }
 
 const onEdit = () => {
+    isLoading.value = true;
     router.push(`/invoice/${props.id}/edit`);
 }
 </script>

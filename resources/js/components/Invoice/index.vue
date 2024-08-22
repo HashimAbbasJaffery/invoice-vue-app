@@ -1,11 +1,12 @@
 <script setup>
 
-import { onMounted, ref, watch, reactive } from 'vue';
+import { onMounted, ref, watch, reactive, inject } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
 import objectToQueryString from '../../utiils/objToQuery';
 
 const router = useRouter();
+let isLoading = inject("isLoading");
 
 const invoices = ref([]);
 // const keyword = ref("");
@@ -15,10 +16,12 @@ const links = ref();
 
 onMounted(async () => {
     try {
-        getInvoices();
+        await getInvoices();
     } catch(e) {
         console.log(e);
     }
+
+    isLoading.value = false;
 })
 
 const filters = reactive({
@@ -33,7 +36,6 @@ const getInvoices = async (link = `/api/invoices?${objectToQueryString(filters)}
     console.log(response.data.invoices.data);
     invoices.value = response.data.invoices.data;
     links.value = response.data.invoices.links;
-    console.log(links.value)
 }
 
 const search_invoice = async () => {
@@ -43,10 +45,12 @@ const search_invoice = async () => {
 }
 
 const add_invoice = async () => {
+    isLoading.value = true;
     router.push("/invoice/create");
 }
 
 const showInvoice = id => {
+    isLoading.value = true;
     router.push(`/invoice/${id}/show`);
 }
 
@@ -56,7 +60,7 @@ watch(filters, function() {
 
 
 </script>
-<template>
+<template v-show="isLoading">
     <div class="container">
         <div class="invoices">
 

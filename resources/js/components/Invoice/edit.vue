@@ -1,7 +1,7 @@
 
 <script setup>
 
-import { onMounted, ref, watch } from 'vue';
+import { onMounted, ref, inject } from 'vue';
 import { useRouter } from 'vue-router';
 
 let props = defineProps({
@@ -17,6 +17,7 @@ const customers = ref([]);
 const products = ref([]);
 const listCart = ref([]);
 const isOpen = ref(false);
+let isLoading = inject("isLoading");
 const errorMessages = ref();
 
 const indexForm = async () => {
@@ -44,6 +45,7 @@ onMounted(async () => {
     await indexForm();
     await getCustomers();
     await getProducts();
+    isLoading.value = false;
 });
 
 const addToCart = item => {
@@ -111,7 +113,6 @@ function get_message(field) {
 </script>
 
 <template>
-    <p>{{ form.customer_id }}</p>
     <div class="container">
         <div class="invoices">
 
