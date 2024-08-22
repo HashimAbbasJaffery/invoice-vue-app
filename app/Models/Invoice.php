@@ -22,8 +22,13 @@ class Invoice extends Model
     public function scopeFilter(Builder $query, $filter) {
         $type = $filter["type"];
         $keyword = $filter["keyword"];
+        $is_paid = $filter["is_paid"];
 
-        // One means filter by customer
+
+        if($is_paid === 'paid') {
+            $query->where("is_paid", 'paid');
+        }
+
         if($type === '1') {
             $query->WhereHas("customer", function($query) use($keyword) {
                 $query->where("firstname", "like", "%$keyword%");

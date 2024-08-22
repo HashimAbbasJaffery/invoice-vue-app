@@ -22,18 +22,20 @@ class InvoiceController extends Controller
     public function search(Request $request) {
         $keyword = $request->keyword;
         $type = $request->type;
+        $is_paid = $request->is_paid;
 
         $invoices = Invoice::with("customer")->paginate(1);
         $filters = [
             "type" => $type,
             "keyword" => $keyword,
+            "is_paid" => $is_paid
         ];
 
-        if($keyword !== null) {
+        // if($keyword !== null) {
             $invoices = Invoice::with("customer")
             ->filter($filters)
             ->paginate(1);
-        }
+         // }
 
         return response()->json([
             "invoices" => $invoices

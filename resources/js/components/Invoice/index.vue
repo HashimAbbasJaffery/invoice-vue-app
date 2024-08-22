@@ -1,15 +1,17 @@
 <script setup>
 
-import { onMounted, ref, watch } from 'vue';
+import { onMounted, ref, watch, reactive } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
+import objectToQueryString from '../../utiils/objToQuery';
+
 const router = useRouter();
 
 const invoices = ref([]);
-const keyword = ref("");
+// const keyword = ref("");
 const links = ref();
-const type = ref(1);
-const is_paid = ref();
+// const type = ref(1);
+// const is_paid = ref("all");
 
 onMounted(async () => {
     try {
@@ -19,8 +21,15 @@ onMounted(async () => {
     }
 })
 
-const getInvoices = async (link = `/api/invoices?keyword=${keyword.value}&type=${type.value}&is_paid=${is_paid.value}`) => {
-    const response = await axios.get(`${link}&keyword=${keyword.value}&type=${type.value}&is_paid=${is_paid.value}`);
+const filters = reactive({
+    keyword: "",
+    type: 1,
+    is_paid: "all"
+});
+
+// keyword=${keyword.value}&type=${type.value}&is_paid=${is_paid.value}
+const getInvoices = async (link = `/api/invoices?${objectToQueryString(filters)}`) => {
+    const response = await axios.get(`${link}&${objectToQueryString(filters)}`);
     console.log(response.data.invoices.data);
     invoices.value = response.data.invoices.data;
     links.value = response.data.invoices.links;
@@ -28,7 +37,7 @@ const getInvoices = async (link = `/api/invoices?keyword=${keyword.value}&type=$
 }
 
 const search_invoice = async () => {
-    const response = await axios.get(`/api/search_invoice?keyword=${keyword.value}&type=${type.value}&is_paid=${is_paid.value}`);
+    const response = await axios.get(`/api/search_invoice?${objectToQueryString(filters)}`);
     invoices.value = response.data.invoices.data;
     links.value = response.data.invoices.links;
 }
@@ -41,14 +50,7 @@ const showInvoice = id => {
     router.push(`/invoice/${id}/show`);
 }
 
-watch(keyword, function() {
-    search_invoice();
-})
-watch(type, function() {
-    search_invoice();
-})
-watch(is_paid, function() {
-    alert(is_paid.value)
+watch(filters, function() {
     search_invoice();
 })
 
@@ -77,12 +79,12 @@ watch(is_paid, function() {
                 <div class="table--filter--listWrapper">
                     <ul class="table--filter--list">
                         <li>
-                            <p style="cursor: pointer;" class="table--filter--link" @click="is_paid = 0" :class="{ 'table--filter--link--active': !is_paid }">
+                            <p style="cursor: pointer;" class="table--filter--link" @click="filters.is_paid = 'all'" :class="{ 'table--filter--link--active': filters.is_paid === 'all' }">
                                 All
                             </p>
                         </li>
                         <li>
-                            <p style="cursor: pointer;" class="table--filter--link " @click="is_paid = 1" :class="{ 'table--filter--link--active': is_paid }">
+                            <p style="cursor: pointer;" class="table--filter--link " @click="filters.is_paid = 'paid'" :class="{ 'table--filter--link--active': filters.is_paid === 'paid'}">
                                 Paid
                             </p>
                         </li>
@@ -92,7 +94,7 @@ watch(is_paid, function() {
 
             <div class="table--search">
                 <div class="table--search--wrapper">
-                    <select class="table--search--select" v-model="type" name="" id="">
+                    <select class="table--search--select" v-model="filters.type" name="" id="">
                         <option value="1">Filter By Customer</option>
                         <option value="2">Filter By Number</option>
                         <option value="3">Filter By Total</option>
@@ -102,7 +104,7 @@ watch(is_paid, function() {
                 </div>
                 <div class="relative">
                     <i class="table--search--input--icon fas fa-search "></i>
-                    <input class="table--search--input" v-model="keyword" type="text" placeholder="Search invoice">
+                    <input class="table--search--input" v-model="filters.keyword" type="text" placeholder="Search invoice">
                 </div>
             </div>
 
@@ -128,10 +130,8 @@ watch(is_paid, function() {
             <div class="table--items" v-else>
                 <p>Invoice Not Found!</p>
             </div>
-            <nav aria-label="Page navigation example" v-if="invoices.length" style="margin-top: 10px; margin-left: 10px;">
-                <ul class="pagination" style="display: flex;">
-                    <li @click="getInvoices(link.url)" v-for="link in links" class="page-item" :class="{ 'active': link.active }" style="padding: 5px 10px;  border: 1px solid black;"><a class="page-link" style="text-decoration: none;" href="#" v-html="link.label"></a></li>
-                </ul>
+            <nav aria-label="Page navigation example" v-if="invoices.length" style="display: flex;margin-top: 10px; margin-left: 10px;">
+                <button @click="getInvoices(link.url)" :disabled="!link.url" v-for="link in links" class="page-item" :class="{ 'active': link.active }" style="padding: 5px 10px;  border: 1px solid black;"><a disabled class="page-link" style="text-decoration: none;" href="#" v-html="link.label"></a></button>
             </nav>
         </div>
 
@@ -147,5 +147,9 @@ watch(is_paid, function() {
 }
 .active a {
     color: white;
+}
+button:disabled {
+    background: lightgray;
+    color: black;
 }
 </style>

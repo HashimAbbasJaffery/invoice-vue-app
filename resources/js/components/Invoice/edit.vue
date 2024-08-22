@@ -94,8 +94,8 @@ const submitForm = async () => {
         console.log(e);
     }
     if(response && response.data) {
-        // router.push("/")
-        console.log(response.data);
+        router.push("/")
+        // console.log(response.data);
     }
 }
 
